@@ -8,4 +8,4 @@ moveit_setup_assistant_config:
   CONFIG:
     author_name: Gerard Harkema
     author_email: GA.Harkema@avans.nl
-    generated_timestamp: 1583403066
+    generated_timestamp: 1584299251
