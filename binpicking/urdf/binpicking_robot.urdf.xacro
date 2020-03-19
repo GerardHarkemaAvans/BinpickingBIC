@@ -29,7 +29,13 @@
   <xacro:ur5e_robot prefix="" joint_limited="false"
     kinematics_file="${load_yaml('$(arg kinematics_config)')}"
     />
+  <!-- bracket/beugel -->
+  <xacro:include filename="$(find binpicking_support)/beugel/urdf/Beugel.urdf.xacro" />
+  <xacro:beugel/>
 
+  <!-- camera -->
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro" />
+ 
   <link name="world" />
   <link name="baseplate_link">
     <visual>
@@ -70,6 +76,38 @@
     <origin xyz="0.0 0.0 0.01" rpy="0.0 0.0 0.0"/>
   </joint>
 
+  <link name="beugel_base_position"/>
+  <!-- tool0 to beugel_base_position -->
+  <!-- cahnge these valuse to place the beugel on the right position -->
+  <joint name="beugel_base_position_to_tool0" type="fixed">
+    <parent link="tool0" />
+    <child link="beugel_base_position" />
+    <origin xyz="0.0 0.00 0.01" rpy="${pi/2} 0.0 0.0"/> <!-- deze waardes zijn ook nogniet geheel juist-->
+  </joint>
 
+  <joint name="beugel_link_to_beugel_base_position" type="fixed">
+    <parent link="beugel_base_position" />
+    <child link="beugel_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+  </joint>
 
+  <link name="beugel_camera_position"/>
+  <!-- beugel_base_position to beugel_camera_position -->
+  <joint name="beugel_to_beugel_base_position" type="fixed">
+    <parent link="beugel_link" />
+    <child link="beugel_camera_position" />
+    <origin xyz="0.0 -0.0049 0.0507" rpy="0.0 ${pi/6} -${pi/2}"/>
+  </joint>
+
+ <link name="camera_mouniting_holes"/>
+ <joint name="camera_mouniting_holes_to_beugel_camera_position" type="fixed">
+    <parent link="beugel_camera_position" />
+    <child link="camera_mouniting_holes" />
+    <origin xyz="-0.006 0.0 -0.006" rpy="0.0 0.0 ${pi}"/> <!-- deze waardes zijn nog niet geheel juist, natrekken bij mechanische tekeningen camera-->
+ </joint>
+
+  <!-- camera_to robot -->
+  <xacro:sensor_d435 parent="camera_mouniting_holes" use_nominal_extrinsics="true">
+    <origin xyz="0.0 0 0" rpy="0.0 0 0"/>
+  </xacro:sensor_d435>
 </robot>
