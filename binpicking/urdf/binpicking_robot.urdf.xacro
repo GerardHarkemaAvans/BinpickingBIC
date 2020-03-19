@@ -82,7 +82,7 @@
   <joint name="beugel_base_position_to_tool0" type="fixed">
     <parent link="tool0" />
     <child link="beugel_base_position" />
-    <origin xyz="0.0 0.00 0.01" rpy="${pi/2} 0.0 0.0"/> <!-- deze waardes zijn ook nogniet geheel juist-->
+    <origin xyz="0.0 0.00 0.01" rpy="${pi/2} 0 ${pi}"/> <!-- deze waardes zijn ook nogniet geheel juist-->
   </joint>
 
   <joint name="beugel_link_to_beugel_base_position" type="fixed">
