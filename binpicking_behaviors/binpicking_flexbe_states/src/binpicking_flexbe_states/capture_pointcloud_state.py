@@ -1,40 +1,44 @@
 #!/usr/bin/env python
 import rospy
 
+from binpicking_msgs.srv import CapturePointcloud, CapturePointcloudRequest, CapturePointcloudResponse
+
 from flexbe_core import EventState, Logger
 
 
-class CalculateObjectPoseState(EventState):
+class CapturePointcloudState(EventState):
 	'''
-	Calcualtes the pose of a object from a pointcloud
+	Caputres a Pouncloud form the Realsensor
 
-	># pointcloud		sensor_msgs/PointCloud2	Pointcloud of the objects
+	#> pointcloud		sensor_msgs/PointCloud2	Pointcloud of the objects
 
-	<= continue 			Given time has passed.
+
+	<= continue 			 	Given time has passed.
 	<= failed 				Example for a failure outcome.
 
 	'''
 
 	def __init__(self, target_time):
 		# Declare outcomes, input_keys, and output_keys by calling the super constructor with the corresponding arguments.
-		super(CalculateObjectPoseState, self).__init__(outcomes = ['continue', 'failed'])
+		super(CapturePointcloudState, self).__init__(outcomes = ['continue', 'failed'])
 
 		# Store state parameter for later use.
 		self._target_time = rospy.Duration(target_time)
 
 		# The constructor is called when building the state machine, not when actually starting the behavior.
 		# Thus, we cannot save the starting time now and will do so later.
-		self._start_time = None
-
+		rospy.loginfo("Waiting for service...")
+		rospy.wait_for_service('capture_pointcloud')
+		# Create a service proxy.
+		self.capture_pointcloud = rospy.ServiceProxy('capture_pointcloud', CapturePointcloud)
 
 	def execute(self, userdata):
 		# This method is called periodically while the state is active.
 		# Main purpose is to check state conditions and trigger a corresponding outcome.
 		# If no outcome is returned, the state will stay active.
 
-		if rospy.Time.now() - self._start_time > self._target_time:
-			return 'continue' # One of the outcomes declared above.
-		
+		return 'continue' # One of the outcomes declared above.
+
 
 	def on_enter(self, userdata):
 		# This method is called when the state becomes active, i.e. a transition from another state to this one is taken.
@@ -43,11 +47,13 @@ class CalculateObjectPoseState(EventState):
 		# The following code is just for illustrating how the behavior logger works.
 		# Text logged by the behavior logger is sent to the operator and displayed in the GUI.
 
-		time_to_wait = (self._target_time - (rospy.Time.now() - self._start_time)).to_sec()
+	    try:
+	        # Call the service here.
+	        self.service_response = self.capture_pointcloud(0)
 
-		if time_to_wait > 0:
-			Logger.loginfo('Need to wait for %.1f seconds.' % time_to_wait)
-			Logger.loginfo('Calculate object pose')
+	    except rospy.ServiceException, e:
+	        print "Service call failed: %s"%e
+
 
 
 	def on_exit(self, userdata):
@@ -63,7 +69,7 @@ class CalculateObjectPoseState(EventState):
 		# because if anything failed, the behavior would not even be started.
 
 		# In this example, we use this event to set the correct start time.
-		self._start_time = rospy.Time.now()
+		pass # Nothing to do in this example.
 
 
 	def on_stop(self):
@@ -71,4 +77,3 @@ class CalculateObjectPoseState(EventState):
 		# Use this event to clean up things like claimed resources.
 
 		pass # Nothing to do in this example.
-		

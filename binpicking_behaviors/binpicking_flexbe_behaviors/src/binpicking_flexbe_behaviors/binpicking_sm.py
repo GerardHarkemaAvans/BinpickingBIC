@@ -9,9 +9,10 @@
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
-from binpicking_flexbe_states.calculate_object_pose_state import CalculateObjectPoseState
-from binpicking_flexbe_states.take_photo_state import TakePhotoState
 from binpicking_flexbe_states.vacuum_gripper_control_state import VacuumGripperControlState
+from binpicking_flexbe_states.calculate_object_pose_state import CalculateObjectPoseState
+from binpicking_flexbe_states.capture_pointcloud_state import CapturePointcloudState
+from binpicking_flexbe_states.compute_grasp_state import ComputeGraspState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -43,12 +44,19 @@ class BinpickingSM(Behavior):
 
 		# Behavior comments:
 
+		# O 44 185 
+		# Test commentaar
+
 
 
 	def create(self):
 		pick_group = 'manipulator'
+		names = ['robot1_shoulder_pan_joint', 'robot1_shoulder_lift_joint', 'robot1_elbow_joint', 'robot1_wrist_1_joint', 'robot1_wrist_2_joint', 'robot1_wrist_3_joint']
+		gripper = "vacuum_gripper1_suction_cup"
 		# x:336 y:593, x:317 y:372
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
+		_state_machine.userdata.captured_pointcloud = []
+		_state_machine.userdata.part_pose = []
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -71,71 +79,71 @@ class BinpickingSM(Behavior):
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:591 y:42
-			OperatableStateMachine.add('CalculateObjectPose',
-										CalculateObjectPoseState(target_time=5.0),
-										transitions={'continue': 'GoPreGraspPosition', 'failed': 'failed'},
-										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
-
 			# x:217 y:38
 			OperatableStateMachine.add('GoPhotoPosition',
 										SrdfStateToMoveit(config_name='PhotoPos', move_group=pick_group, action_topic='/move_group', robot_name=""),
-										transitions={'reached': 'TakePhoto', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										transitions={'reached': 'CapturePointcloud', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:756 y:43
+			# x:907 y:43
 			OperatableStateMachine.add('GoPreGraspPosition',
 										SrdfStateToMoveit(config_name='PreGraspPos', move_group=pick_group, action_topic='/move_group', robot_name=""),
-										transitions={'reached': 'GoGraspPosition', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										transitions={'reached': 'GraspObject', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:758 y:308
+			# x:911 y:297
 			OperatableStateMachine.add('GoObjectLiftPosition',
 										SrdfStateToMoveit(config_name='PreGraspPos', move_group=pick_group, action_topic='/move_group', robot_name=""),
 										transitions={'reached': 'GoHomeTransfer', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:425 y:40
-			OperatableStateMachine.add('TakePhoto',
-										TakePhotoState(target_time=3.0),
-										transitions={'continue': 'CalculateObjectPose', 'failed': 'failed'},
-										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
-
-			# x:760 y:133
-			OperatableStateMachine.add('GoGraspPosition',
-										SrdfStateToMoveit(config_name='GraspPos', move_group=pick_group, action_topic='/move_group', robot_name=""),
-										transitions={'reached': 'GraspObject', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
-										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
-										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
-
-			# x:755 y:224
+			# x:909 y:210
 			OperatableStateMachine.add('GraspObject',
 										VacuumGripperControlState(target_time=4),
 										transitions={'continue': 'GoObjectLiftPosition', 'failed': 'failed'},
 										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:757 y:398
+			# x:909 y:393
 			OperatableStateMachine.add('GoHomeTransfer',
 										SrdfStateToMoveit(config_name='HomePos', move_group=pick_group, action_topic='/move_group', robot_name=""),
 										transitions={'reached': 'GoDropPosition', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:756 y:494
+			# x:908 y:482
 			OperatableStateMachine.add('GoDropPosition',
 										SrdfStateToMoveit(config_name='DropPos', move_group=pick_group, action_topic='/move_group', robot_name=""),
 										transitions={'reached': 'DropObject', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
-			# x:751 y:575
+			# x:903 y:575
 			OperatableStateMachine.add('DropObject',
 										VacuumGripperControlState(target_time=2),
 										transitions={'continue': 'GoHomeEnd', 'failed': 'failed'},
 										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:570 y:41
+			OperatableStateMachine.add('CalculeteObjectPose',
+										CalculateObjectPoseState(target_time=3),
+										transitions={'continue': 'Compute Pickpoint', 'failed': 'failed'},
+										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:403 y:39
+			OperatableStateMachine.add('CapturePointcloud',
+										CapturePointcloudState(target_time=3),
+										transitions={'continue': 'CapturePointcloud', 'failed': 'failed'},
+										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:752 y:40
+			OperatableStateMachine.add('Compute Pickpoint',
+										ComputeGraspState(group=pick_group, offset=0.0, joint_names=names, tool_link=gripper, rotation=0),
+										transitions={'continue': 'GoPreGraspPosition', 'failed': 'failed'},
+										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off},
+										remapping={'pose': 'part_pose', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 
 		return _state_machine
