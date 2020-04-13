@@ -13,6 +13,7 @@ from binpicking_flexbe_states.vacuum_gripper_control_state import VacuumGripperC
 from binpicking_flexbe_states.calculate_object_pose_state import CalculateObjectPoseState
 from binpicking_flexbe_states.capture_pointcloud_state import CapturePointcloudState
 from binpicking_flexbe_states.compute_grasp_state import ComputeGraspState
+from binpicking_flexbe_states.moveit_to_joints_dyn_state import MoveitToJointsDynState as binpicking_flexbe_states__MoveitToJointsDynState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -44,19 +45,17 @@ class BinpickingSM(Behavior):
 
 		# Behavior comments:
 
-		# O 44 185 
-		# Test commentaar
-
 
 
 	def create(self):
 		pick_group = 'manipulator'
-		names = ['robot1_shoulder_pan_joint', 'robot1_shoulder_lift_joint', 'robot1_elbow_joint', 'robot1_wrist_1_joint', 'robot1_wrist_2_joint', 'robot1_wrist_3_joint']
-		gripper = "vacuum_gripper1_suction_cup"
+		names = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
+		gripper = "vacuum_gripper_suction_cup"
 		# x:336 y:593, x:317 y:372
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.captured_pointcloud = []
 		_state_machine.userdata.part_pose = []
+		_state_machine.userdata.pick_configuration = []
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]
@@ -89,7 +88,7 @@ class BinpickingSM(Behavior):
 			# x:907 y:43
 			OperatableStateMachine.add('GoPreGraspPosition',
 										SrdfStateToMoveit(config_name='PreGraspPos', move_group=pick_group, action_topic='/move_group', robot_name=""),
-										transitions={'reached': 'GraspObject', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										transitions={'reached': 'GoToPickpoint', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
@@ -140,10 +139,17 @@ class BinpickingSM(Behavior):
 
 			# x:752 y:40
 			OperatableStateMachine.add('Compute Pickpoint',
-										ComputeGraspState(group=pick_group, offset=0.0, joint_names=names, tool_link=gripper, rotation=0),
+										ComputeGraspState(group=pick_group, offset=0.0, joint_names=names, tool_link=gripper, rotation=3.1415),
 										transitions={'continue': 'GoPreGraspPosition', 'failed': 'failed'},
 										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off},
 										remapping={'pose': 'part_pose', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
+
+			# x:912 y:113
+			OperatableStateMachine.add('GoToPickpoint',
+										binpicking_flexbe_states__MoveitToJointsDynState(move_group=pick_group, offset=0.0, tool_link=gripper, action_topic='/move_group'),
+										transitions={'reached': 'GraspObject', 'planning_failed': 'failed', 'control_failed': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off},
+										remapping={'joint_values': 'pick_configuration', 'joint_names': 'joint_names'})
 
 
 		return _state_machine

@@ -60,7 +60,7 @@ This is an alternative implementation of the original MoveitToJointsDynState sta
 
 '''
 
-class BpMoveitToJointsDynState(EventState):
+class MoveitToJointsDynState(EventState):
 	'''
 	Uses MoveIt to plan and move the specified joints to the target configuration.
 
@@ -89,7 +89,7 @@ class BpMoveitToJointsDynState(EventState):
 		'''
 		Constructor
 		'''
-		super(BpMoveitToJointsDynState, self).__init__(
+		super(MoveitToJointsDynState, self).__init__(
 			outcomes=['reached', 'planning_failed', 'control_failed'],
 			input_keys=['joint_values', 'joint_names'])
 
