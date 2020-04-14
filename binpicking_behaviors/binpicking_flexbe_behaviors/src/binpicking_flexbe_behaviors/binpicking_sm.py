@@ -10,10 +10,10 @@
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from binpicking_flexbe_states.vacuum_gripper_control_state import VacuumGripperControlState
-from binpicking_flexbe_states.calculate_object_pose_state import CalculateObjectPoseState
-from binpicking_flexbe_states.capture_pointcloud_state import CapturePointcloudState
 from binpicking_flexbe_states.compute_grasp_state import ComputeGraspState
 from binpicking_flexbe_states.moveit_to_joints_dyn_state import MoveitToJointsDynState as binpicking_flexbe_states__MoveitToJointsDynState
+from binpicking_flexbe_states.capture_pointcloud_state import CapturePointcloudState
+from binpicking_flexbe_states.calculate_object_pose_state import CalculateObjectPoseState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -125,18 +125,6 @@ class BinpickingSM(Behavior):
 										transitions={'continue': 'GoHomeEnd', 'failed': 'failed'},
 										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
 
-			# x:570 y:41
-			OperatableStateMachine.add('CalculeteObjectPose',
-										CalculateObjectPoseState(target_time=3),
-										transitions={'continue': 'Compute Pickpoint', 'failed': 'failed'},
-										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
-
-			# x:403 y:39
-			OperatableStateMachine.add('CapturePointcloud',
-										CapturePointcloudState(target_time=3),
-										transitions={'continue': 'CapturePointcloud', 'failed': 'failed'},
-										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
-
 			# x:752 y:40
 			OperatableStateMachine.add('Compute Pickpoint',
 										ComputeGraspState(group=pick_group, offset=0.0, joint_names=names, tool_link=gripper, rotation=3.1415),
@@ -150,6 +138,20 @@ class BinpickingSM(Behavior):
 										transitions={'reached': 'GraspObject', 'planning_failed': 'failed', 'control_failed': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off},
 										remapping={'joint_values': 'pick_configuration', 'joint_names': 'joint_names'})
+
+			# x:384 y:38
+			OperatableStateMachine.add('CapturePointcloud',
+										CapturePointcloudState(),
+										transitions={'continue': 'CalculateObjectPose', 'failed': 'failed'},
+										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off},
+										remapping={'pointcloud': 'captured_pointcloud'})
+
+			# x:569 y:37
+			OperatableStateMachine.add('CalculateObjectPose',
+										CalculateObjectPoseState(),
+										transitions={'continue': 'Compute Pickpoint', 'failed': 'failed'},
+										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off},
+										remapping={'pointcloud': 'captured_pointcloud', 'object_pose': 'part_pose'})
 
 
 		return _state_machine

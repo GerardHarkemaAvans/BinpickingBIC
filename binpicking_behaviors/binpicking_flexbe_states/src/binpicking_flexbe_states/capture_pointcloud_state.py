@@ -5,25 +5,26 @@ from binpicking_msgs.srv import CapturePointcloud, CapturePointcloudRequest, Cap
 
 from flexbe_core import EventState, Logger
 
+from sensor_msgs.msg import PointCloud2
+import copy
 
 class CapturePointcloudState(EventState):
 	'''
 	Caputres a Pouncloud form the Realsensor
 
-	#> pointcloud		sensor_msgs/PointCloud2	Pointcloud of the objects
+	#> pointcloud		PointCloud2		Pointcloud of the objects
 
 
-	<= continue 			 	Given time has passed.
-	<= failed 				Example for a failure outcome.
+	<= continue 					Given time has passed.
+	<= failed 						Example for a failure outcome.
 
 	'''
 
-	def __init__(self, target_time):
+	def __init__(self):
 		# Declare outcomes, input_keys, and output_keys by calling the super constructor with the corresponding arguments.
-		super(CapturePointcloudState, self).__init__(outcomes = ['continue', 'failed'])
+		super(CapturePointcloudState, self).__init__(outcomes = ['continue', 'failed'], output_keys = ['pointcloud'])
 
 		# Store state parameter for later use.
-		self._target_time = rospy.Duration(target_time)
 
 		# The constructor is called when building the state machine, not when actually starting the behavior.
 		# Thus, we cannot save the starting time now and will do so later.
@@ -37,6 +38,7 @@ class CapturePointcloudState(EventState):
 		# Main purpose is to check state conditions and trigger a corresponding outcome.
 		# If no outcome is returned, the state will stay active.
 
+		userdata.pointcloud = copy.deepcopy(self.service_response.pointcloud)
 		return 'continue' # One of the outcomes declared above.
 
 
@@ -49,12 +51,12 @@ class CapturePointcloudState(EventState):
 
 	    try:
 	        # Call the service here.
-	        self.service_response = self.capture_pointcloud(0)
+#	        self.service_response = CapturePointcloudResponse()
+			self.service_response = self.capture_pointcloud(0)
+#			self.capture_pointcloud(0)
 
 	    except rospy.ServiceException, e:
 	        print "Service call failed: %s"%e
-
-
 
 	def on_exit(self, userdata):
 		# This method is called when an outcome is returned and another state gets active.

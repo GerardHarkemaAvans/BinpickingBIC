@@ -13,6 +13,7 @@
 
   <export>
     <flexbe_behaviors />
+    <flexbe_behaviors />
   </export>
 
 </package>
