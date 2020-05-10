@@ -51,9 +51,7 @@ class CapturePointcloudState(EventState):
 
 	    try:
 	        # Call the service here.
-#	        self.service_response = CapturePointcloudResponse()
 			self.service_response = self.capture_pointcloud(0)
-#			self.capture_pointcloud(0)
 
 	    except rospy.ServiceException, e:
 	        print "Service call failed: %s"%e

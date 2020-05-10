@@ -56,54 +56,48 @@ import tf2_ros
 import tf2_geometry_msgs
 import actionlib
 
+
+import rospy
+import sensor_msgs
+
+
 '''
 Created on Sep 5 2018
-
 @author: HRWROS mooc instructors
-
+Adapted to Ariac by: Gerard Harkema
 This state provides the joint configuration to grasp the box in the factory simulation of the MOOC "Hello (Real) World with ROS", given the pose of the box as provided by the DetectPartCameraState
 '''
 
 class ComputeGraspState(EventState):
 	'''
 	Computes the joint configuration needed to grasp the part given its pose.
-
-	-- group       		string		Name of the group for which to compute the joint values for grasping.
-	-- offset		float		Some offset
+	-- time_out		float		Value to wait on transform	
 	-- joint_names		string[]	Names of the joints
-	-- tool_link		string		e.g. "vacuum_gripper1_suction_cup"
-	-- rotation		float		Rotation?
-
-
+	># offset		float		Some offset
+	># rotation		float		Rotation?
+	># move_group       	string		Name of the group for which to compute the joint values for grasping.
+        ># move_group_prefix    string          Name of the prefix of the move group to be used for planning.
+	># tool_link		string		e.g. "ee_link"
 	># pose			PoseStamped	pose of the part to pick
 	#> joint_values		float[]		joint values for grasping
 	#> joint_names		string[]	names of the joints
-
 	<= continue 				if a grasp configuration has been computed for the pose
 	<= failed 				otherwise.
 	'''
 
-	def __init__(self, group, offset, joint_names, tool_link, rotation):
+	def __init__(self, joint_names, time_out):
 		# Declare outcomes, input_keys, and output_keys by calling the super constructor with the corresponding arguments.
-		super(ComputeGraspState, self).__init__(outcomes = ['continue', 'failed'], input_keys = ['pose'], output_keys = ['joint_values','joint_names'])
+		super(ComputeGraspState, self).__init__(outcomes = ['continue', 'failed', 'time_out'], input_keys = ['move_group', 'move_group_prefix', 'tool_link','pose', 'offset', 'rotation'], output_keys = ['joint_values','joint_names'])
 
-		self._group = group
-		self._offset = offset
 		self._joint_names = joint_names
-		self._tool_link = tool_link
-		self._rotation = rotation
+		self._wait	= time_out
+		self._time_out_reached = False
 
-		self._srv_name = '/compute_ik'
-		self._ik_srv = ProxyServiceCaller({self._srv_name: GetPositionIK})
 
 		# tf to transfor the object pose
 		self._tf_buffer = tf2_ros.Buffer(rospy.Duration(10.0)) #tf buffer length
 		self._tf_listener = tf2_ros.TransformListener(self._tf_buffer)
 
-		self._robot1_client = actionlib.SimpleActionClient('execute_trajectory',
-			moveit_msgs.msg.ExecuteTrajectoryAction)
-		self._robot1_client.wait_for_server()
-		rospy.loginfo('Execute Trajectory server is available for robot1')
 
 	def execute(self, userdata):
 		# This method is called periodically while the state is active.
@@ -111,6 +105,10 @@ class ComputeGraspState(EventState):
 		# If no outcome is returned, the state will stay active.
 
 		rospy.logwarn(userdata.pose)
+
+		if self._time_out_reached == True:
+			return 'time_out'
+
 
 		if self._failed == True:
 			return 'failed'
@@ -134,18 +132,45 @@ class ComputeGraspState(EventState):
 	def on_enter(self, userdata):
 		# This method is called when the state becomes active, i.e. a transition from another state to this one is taken.
 		# It is primarily used to start actions which are associated with this state.
+		rospy.loginfo('done 0')
+
+		self._move_group = userdata.move_group
+		self._move_group_prefix = userdata.move_group_prefix
+		self._tool_link = userdata.tool_link
+
+		self._offset = userdata.offset
+		self._rotation = userdata.rotation
+
+		self._srv_name = userdata.move_group_prefix + '/compute_ik'
+		self._ik_srv = ProxyServiceCaller({self._srv_name: GetPositionIK})
+
+		rospy.loginfo('done 1')
+		self._robot1_client = actionlib.SimpleActionClient(userdata.move_group_prefix + '/execute_trajectory', moveit_msgs.msg.ExecuteTrajectoryAction)
+		#self._robot1_client = actionlib.SimpleActionClient('/execute_trajectory', moveit_msgs.msg.ExecuteTrajectoryAction)
+		self._robot1_client.wait_for_server()
+		rospy.loginfo('Execute Trajectory server is available for robot')
+
+		rospy.loginfo('done 2')
+		self._start_time = rospy.get_rostime()
 
 		# Get transform between camera and robot1_base
 		while True:
+			rospy.loginfo('.')
 			rospy.sleep(0.1)
 			try:
 				target_pose = self._tf_buffer.transform(userdata.pose, "world")
 				break
 			except (tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
 				rospy.logerr("ComputeGraspState::on_enter - Failed to transform to world")
-				continue
+				self._failed = True
+				pass
+			elapsed = rospy.get_rostime() - self._start_time;
+			if (elapsed.to_sec() > self._wait):
+				self._time_out_reached = True
+				pass
 
-		# the grasp pose is defined as being located on top of the box
+
+		# the grasp pose is defined as being located on top of the item
 		target_pose.pose.position.z += self._offset + 0.0
 
 
@@ -153,21 +178,20 @@ class ComputeGraspState(EventState):
 
 		#q_orig = [target_pose.pose.orientation.x, target_pose.pose.orientation.y, target_pose.pose.orientation.z, target_pose.pose.orientation.w]
 		q_orig = [0, 0, 0, 1]
-		q_rot = quaternion_from_euler(self._rotation, 0, 0)
+		#q_rot = quaternion_from_euler(self._rotation, 0, 0)
+		q_rot = quaternion_from_euler(self._rotation, math.pi/2.0, 0) # math.pi/2.0 added by gerard!!
 		#q_rot = quaternion_from_euler(math.pi/-2.0, 0, 0)
 		res_q = quaternion_multiply(q_rot, q_orig)
 		target_pose.pose.orientation = geometry_msgs.msg.Quaternion(*res_q)
 
 		# use ik service to compute joint_values
 		self._srv_req = GetPositionIKRequest()
-		self._srv_req.ik_request.group_name = self._group
-		self._srv_req.ik_request.robot_state.joint_state = rospy.wait_for_message(self._group + '/joint_states', sensor_msgs.msg.JointState)
-
+		self._srv_req.ik_request.group_name = self._move_group 
+		self._srv_req.ik_request.robot_state.joint_state = rospy.wait_for_message(self._move_group_prefix + '/joint_states', sensor_msgs.msg.JointState)
 		self._srv_req.ik_request.ik_link_name = self._tool_link  # TODO: this needs to be a parameter
 		self._srv_req.ik_request.pose_stamped = target_pose
 		self._srv_req.ik_request.avoid_collisions = True
 		self._srv_req.ik_request.attempts = 500
-
 		try:
 			self._srv_result = self._ik_srv.call(self._srv_name, self._srv_req)
 			self._failed = False

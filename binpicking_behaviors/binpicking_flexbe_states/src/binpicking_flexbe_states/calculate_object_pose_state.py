@@ -30,10 +30,10 @@ class CalculateObjectPoseState(EventState):
 
 		# The constructor is called when building the state machine, not when actually starting the behavior.
 		# Thus, we cannot save the starting time now and will do so later.
-		rospy.loginfo("Waiting for service...")
-		rospy.wait_for_service('calculate_object_pose')
+		#rospy.loginfo("Waiting for service...")
+		#rospy.wait_for_service('calculate_object_pose')
 		# Create a service proxy.
-		self.calculate_object_pose = rospy.ServiceProxy('calculate_object_pose', CalculateObjectposeFromPointcloud)
+		#self.calculate_object_pose = rospy.ServiceProxy('calculate_object_pose', CalculateObjectposeFromPointcloud)
 
 	def execute(self, userdata):
 		# This method is called periodically while the state is active.
@@ -49,16 +49,22 @@ class CalculateObjectPoseState(EventState):
 
 		# The following code is just for illustrating how the behavior logger works.
 		# Text logged by the behavior logger is sent to the operator and displayed in the GUI.
+		rospy.loginfo("Waiting for service...")
+		rospy.wait_for_service('calculate_object_pose')
+		# Create a service proxy.
+		self.calculate_object_pose = rospy.ServiceProxy('calculate_object_pose', CalculateObjectposeFromPointcloud)
 
-		request = CalculateObjectposeFromPointcloudRequest
+
+		request = CalculateObjectposeFromPointcloudRequest()
 		request.pointcloud =  copy.deepcopy(userdata.pointcloud)
-	    try:
-	        # Call the service here.
+		try:
+			# Call the service here.
 			self.service_response = self.calculate_object_pose(request)
 
-	    except rospy.ServiceException, e:
-	        print "Service call failed: %s"%e
+		except rospy.ServiceException, e:
+			rospy.logerr("Service call failed")
 
+		#pass # Nothing to do in this example.
 
 	def on_exit(self, userdata):
 		# This method is called when an outcome is returned and another state gets active.
