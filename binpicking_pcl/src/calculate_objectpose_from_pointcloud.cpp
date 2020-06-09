@@ -10,11 +10,12 @@
 //#include <pcl/ModelCoefficients.h>
 
 #include <ros/ros.h>
+#include <geometry_msgs/Vector3.h>
 
 #include "calculate_objectpose_from_pointcloud.h"
 
 
-void calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr &colored_cloud) {
+geometry_msgs::Vector3 calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr &colored_cloud) {
 
 //	pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud = reg.getColoredCloud();
 #if 0
@@ -58,6 +59,8 @@ void calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
 	std::vector <pcl::PointIndices> clusters;
 	reg.extract(clusters);
 
+	colored_cloud = reg.getColoredCloud();
+
 	ROS_INFO("Number of clusters/objects is equal to %i", clusters.size());
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZ>);
@@ -76,7 +79,6 @@ void calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
 		cloud_cluster->is_dense = true;
 
 
-		colored_cloud = reg.getColoredCloud();
 
 		// Find centroid of the object
 		Eigen::Vector4f centroid;
@@ -101,6 +103,15 @@ void calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cl
 		cnt++;
 	}
 	ROS_INFO("The centerpoint of the nearest object: %f, %f, %f (x,y,z)", CenterPointMin.x, CenterPointMin.y, CenterPointMin.z); 
+
+	geometry_msgs::Vector3 result;
+	
+	result.x = CenterPointMin.x;
+	result.y = CenterPointMin.y;
+	result.z = CenterPointMin.z;
+
+	return result;
+
 
 #if 0
 	pcl::visualization::CloudViewer viewer("Cluster viewer");

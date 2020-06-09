@@ -31,6 +31,18 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 {
 
 	ROS_INFO("CalculateObjectposeFromPointcloud start");
+	
+	pcl::PCLPointCloud2* point_cloud2 = new pcl::PCLPointCloud2;
+	pcl_conversions::toPCL(request.pointcloud, *point_cloud2);  // From ROS-PCL to PCL2
+
+	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+	pcl::fromPCLPointCloud2(*point_cloud2, *point_cloud); // From PCL2 to PCL
+
+
+	pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_Pointcloud(new pcl::PointCloud <pcl::PointXYZRGB>);
+	geometry_msgs::Vector3 object_position = calculate_objectpose_from_pointcloud(point_cloud, colored_Pointcloud);
+
+		
 	geometry_msgs::TransformStamped static_transformStamped;
 
 	tf2_ros::Buffer tfBuffer;
@@ -42,9 +54,10 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 	static_transformStamped.header.stamp = ros::Time::now();
 	static_transformStamped.header.frame_id = "camera_depth_optical_frame";
 	static_transformStamped.child_frame_id = "object_to_grasp";
-	static_transformStamped.transform.translation.x = 0;
-	static_transformStamped.transform.translation.y = 0;
-	static_transformStamped.transform.translation.z = 0.38;
+//	static_transformStamped.transform.translation.x = 0;
+//	static_transformStamped.transform.translation.y = 0;
+//	static_transformStamped.transform.translation.z = 0.38;
+	static_transformStamped.transform.translation = object_position;
 	static_transformStamped.transform.rotation.x = 0;
 	static_transformStamped.transform.rotation.y = 0;
 	static_transformStamped.transform.rotation.z = 0;
@@ -73,15 +86,7 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 		response.success = false;
 	}
 
-	pcl::PCLPointCloud2* point_cloud2 = new pcl::PCLPointCloud2;
-	pcl_conversions::toPCL(request.pointcloud, *point_cloud2);  // From ROS-PCL to PCL2
 
-	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>);
-	pcl::fromPCLPointCloud2(*point_cloud2, *point_cloud); // From PCL2 to PCL
-
-
-	pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_Pointcloud(new pcl::PointCloud <pcl::PointXYZRGB>);
-	calculate_objectpose_from_pointcloud(point_cloud, colored_Pointcloud);
 
 #if 0
 	pcl::PCLPointCloud2* colored_Pointcloud2 = new pcl::PCLPointCloud2;
