@@ -1,4 +1,6 @@
 #include <ros/ros.h>
+#include <geometry_msgs/Vector3.h>
+
 // PCL specific includes
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
