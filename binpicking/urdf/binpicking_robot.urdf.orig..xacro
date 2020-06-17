@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro"
+       name="ur5e" >
+
+    <material name="blue">
+        <color rgba="0 0 0.8 1" />
+    </material>
+    <material name="white">
+        <color rgba="1 1 1 1" />
+    </material>
+    <material name="red">
+        <color rgba="0.8 0 0 1" />
+    </material>
+    <material name="green">
+        <color rgba="0 0.8 0 1" />
+    </material>
+    <material name="LightGrey">
+        <color rgba="0.7 0.7 0.7 1.0" />
+    </material>
+
+  <!-- common stuff -->
+  <xacro:include filename="$(find ur_e_description)/urdf/common.gazebo.xacro" />
+
+  <!-- ur5e -->
+  <xacro:include filename="$(find ur_e_description)/urdf/ur5e.urdf.xacro" />
+
+  <!-- arm -->
+  <xacro:arg name="kinematics_config" default="$(find ur_e_description)/config/ur5e_default.yaml"/>
+  <xacro:ur5e_robot prefix="" joint_limited="false"
+    kinematics_file="${load_yaml('$(arg kinematics_config)')}"
+    />
+  <!-- bracket/beugel -->
+  <xacro:include filename="$(find binpicking_support)/beugel/urdf/Beugel.urdf.xacro" />
+  <xacro:beugel/>
+
+  <!-- camera -->
+  <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro" />
+  <!-- Vacuum Gripper -->
+  <xacro:include filename="$(find binpicking_support)/vacuum_gripper/urdf/vacuum_gripper.urdf.xacro" />
+  <xacro:vacuum_gripper_urdf prefix="gripper_" joint_prefix="suction_cup"/>
+
+  <link name="world" />
+  <link name="baseplate_link">
+    <visual>
+      <origin xyz="0 0 0.0" />
+      <geometry>
+        <box size="1.1 0.7 0.03" />
+      </geometry>
+      <material name="LightGrey"/>
+    </visual>
+  </link>
+
+  <joint name="baseplate_joint" type="fixed">
+    <origin xyz="0 0 0" />
+    <parent link="world" />
+    <child link="baseplate_link" />
+  </joint>
+
+  <link name="mountingplate_link">
+    <visual>
+      <origin xyz="0 0 0.0" />
+      <geometry>
+        <box size="0.3 0.3 0.012" />
+      </geometry>
+      <material name="red"/>
+    </visual>
+  </link>
+
+  <joint name="mountingplate_joint" type="fixed">
+    <origin xyz="0.0 -0.20 0.021" />
+    <parent link="baseplate_link" />
+    <child link="mountingplate_link" />
+  </joint>
+
+  <!-- robot to mouting_plate. -->
+  <joint name="mountingplate_link" type="fixed">
+    <parent link="mountingplate_link" />
+    <child link="base_link" />
+    <origin xyz="0.0 0.0 0.01" rpy="0.0 0.0 0.0"/>
+  </joint>
+
+  <link name="beugel_base_position"/>
+  <!-- tool0 to beugel_base_position -->
+  <!-- cahnge these valuse to place the beugel on the right position -->
+  <joint name="beugel_base_position_to_tool0" type="fixed">
+    <parent link="tool0" />
+    <child link="beugel_base_position" />
+    <origin xyz="0.0 0.00 0.009" rpy="${pi/2} 0 ${pi}"/> <!-- deze waardes zijn ook nogniet geheel juist-->
+  </joint>
+
+  <joint name="beugel_link_to_beugel_base_position" type="fixed">
+    <parent link="beugel_base_position" />
+    <child link="beugel_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+  </joint>
+
+  <link name="beugel_camera_position"/>
+  <!-- beugel_base_position to beugel_camera_position -->
+  <joint name="beugel_to_beugel_base_position" type="fixed">
+    <parent link="beugel_link" />
+    <child link="beugel_camera_position" />
+    <origin xyz="0.0 -0.0049 0.0507" rpy="0.0 ${pi/6} -${pi/2}"/>
+  </joint>
+
+ <link name="camera_mouniting_holes"/>
+ <joint name="camera_mouniting_holes_to_beugel_camera_position" type="fixed">
+    <parent link="beugel_camera_position" />
+    <child link="camera_mouniting_holes" />
+    <origin xyz="-0.006 0.0 -0.006" rpy="0.0 0.0 ${pi}"/> <!-- deze waardes zijn nog niet geheel juist, natrekken bij mechanische tekeningen camera-->
+ </joint>
+
+  <!-- camera_to robot -->
+  <xacro:sensor_d435 parent="camera_mouniting_holes" use_nominal_extrinsics="true">
+    <origin xyz="0.0 0 0" rpy="0.0 0 0"/>
+  </xacro:sensor_d435>
+
+  <joint name="gripper_to_tool1" type="fixed">
+    <parent link="tool0" />
+    <child link="gripper_base_link" />
+    <origin xyz="0.00 0.00 0.005" rpy="0.0 0.0 0.0"/>
+  </joint>
+</robot>

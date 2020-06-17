@@ -36,9 +36,9 @@
   <!-- camera -->
   <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro" />
   <!-- Vacuum Gripper -->
-  <xacro:include filename="$(find binpicking_support)/vacuum_gripper/urdf/vacuum_gripper.urdf.xacro" />
-  <xacro:vacuum_gripper_urdf prefix="gripper_" joint_prefix="suction_cup"/>
-
+  <xacro:include filename="$(find binpicking_support)/epick_gripper/urdf/epick_gripper.urdf.xacro" />
+  <xacro:epick_gripper_urdf prefix="epick_gripper_"/>
+  
   <link name="world" />
   <link name="baseplate_link">
     <visual>
@@ -113,10 +113,18 @@
   <xacro:sensor_d435 parent="camera_mouniting_holes" use_nominal_extrinsics="true">
     <origin xyz="0.0 0 0" rpy="0.0 0 0"/>
   </xacro:sensor_d435>
-
+<!--
   <joint name="gripper_to_tool1" type="fixed">
     <parent link="tool0" />
     <child link="gripper_base_link" />
     <origin xyz="0.00 0.00 0.005" rpy="0.0 0.0 0.0"/>
   </joint>
+-->
+<joint name="beugel_to_epick_gripper" type ="fixed">
+    <parent link="tool0" />
+    <child link="epick_gripper_base_link" />
+      
+    <origin xyz="0.00072798 0.089658 -0.0080751" rpy="0.0 0.0 0.0"/>
+  </joint>
+
 </robot>
