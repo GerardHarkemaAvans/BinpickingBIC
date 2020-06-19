@@ -51,17 +51,17 @@ class BinpickingSM(Behavior):
 	def create(self):
 		pick_group = 'manipulator'
 		names = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
-		gripper = 'ee_link'
+		gripper = 'epick_gripper_BasePickPointLink'
 		# x:336 y:593, x:317 y:372
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.captured_pointcloud = []
 		_state_machine.userdata.part_pose = []
 		_state_machine.userdata.pick_configuration = []
-		_state_machine.userdata.suction_cup_offset = 0.06
+		_state_machine.userdata.suction_cup_offset = 0.00
 		_state_machine.userdata.rotation = 0
 		_state_machine.userdata.move_group_prefix = ''
 		_state_machine.userdata.move_group = "manipulator"
-		_state_machine.userdata.ee_link = 'ee_link'
+		_state_machine.userdata.ee_link = 'epick_gripper_BasePickPointLink'
 
 		# Additional creation code can be added inside the following tags
 		# [MANUAL_CREATE]

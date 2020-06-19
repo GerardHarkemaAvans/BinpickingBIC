@@ -6,6 +6,7 @@
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <tf/transform_broadcaster.h>
 #include <cstdio>
 #include <tf2/LinearMath/Quaternion.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -77,9 +78,27 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 		poseStamped.pose.orientation.w = 1.0;
 		transformStamped = tfBuffer.lookupTransform("base_link", "object_to_grasp", ros::Time(0));
 		tf2::doTransform(poseStamped, poseStamped, transformStamped); // robotPose is the PoseStamped I want to transform
+#if 0
+		tf::StampedTransform poseStamped2;
+		//geometry_msgs::PoseStamped poseStamped2(transformStamped);
+		poseStamped2.
+		poseStamped2.header.stamp = ros::Time(0);
+		poseStamped2.header.frame_id = "base_link";
+		poseStamped2.child_frame_id = "object_to_grasp_capture";
+#endif
+		
+		tf::Transform transform;
+		transform.setOrigin(poseStamped.pose.translation);
+		transform.setRotation(poseStamped.pose.orientation);
+
+		tf::StampedTransform poseStamped2(transform, ros::Time::now(), "base_link", "object_to_grasp_capture");
+
+		static tf::TransformBroadcaster broadcaster;
+		broadcaster.sendTransform(poseStamped2);
 
 		response.success = true;
 		response.object_pose = poseStamped;
+
 	}
 	catch (tf2::TransformException &ex) {
 		ROS_ERROR("Error lookupTransform.");

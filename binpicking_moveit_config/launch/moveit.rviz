@@ -7,7 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /MotionPlanning1/Planned Path1
-        - /PointCloud21
+        - /TF1
         - /TF1/Frames1
         - /TF1/Tree1
       Splitter Ratio: 0.5
@@ -167,17 +167,37 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          epick_gripper_BaseBodyLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BaseCableLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BasePickPointLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BaseVacuumCupLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BaseVacuumMountingBaseLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           forearm_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          gripper_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          gripper_suction_cup:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -342,17 +362,37 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          epick_gripper_BaseBodyLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BaseCableLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BasePickPointLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BaseVacuumCupLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_BaseVacuumMountingBaseLink:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          epick_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           forearm_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          gripper_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          gripper_suction_cup:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -473,14 +513,24 @@ Visualization Manager:
           Value: false
         ee_link:
           Value: false
+        epick_gripper_BaseBodyLink:
+          Value: false
+        epick_gripper_BaseCableLink:
+          Value: false
+        epick_gripper_BasePickPointLink:
+          Value: true
+        epick_gripper_BaseVacuumCupLink:
+          Value: false
+        epick_gripper_BaseVacuumMountingBaseLink:
+          Value: false
+        epick_gripper_base_link:
+          Value: false
         forearm_link:
-          Value: false
-        gripper_base_link:
-          Value: false
-        gripper_suction_cup:
           Value: false
         mountingplate_link:
           Value: false
+        object_to_grasp:
+          Value: true
         shoulder_link:
           Value: false
         tool0:
@@ -529,15 +579,24 @@ Visualization Manager:
                                               {}
                                           camera_depth_frame:
                                             camera_depth_optical_frame:
-                                              {}
+                                              object_to_grasp:
+                                                {}
                                           camera_infra1_frame:
                                             camera_infra1_optical_frame:
                                               {}
                                           camera_infra2_frame:
                                             camera_infra2_optical_frame:
                                               {}
-                              gripper_base_link:
-                                gripper_suction_cup:
+                              epick_gripper_base_link:
+                                epick_gripper_BaseBodyLink:
+                                  {}
+                                epick_gripper_BaseCableLink:
+                                  {}
+                                epick_gripper_BasePickPointLink:
+                                  {}
+                                epick_gripper_BaseVacuumCupLink:
+                                  {}
+                                epick_gripper_BaseVacuumMountingBaseLink:
                                   {}
       Update Interval: 0
       Value: true
@@ -599,7 +658,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.8486812114715576
+      Distance: 2.2060186862945557
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -614,10 +673,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.560397207736969
+      Pitch: 0.050397470593452454
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.193591594696045
+      Yaw: 6.238592624664307
     Saved: ~
 Window Geometry:
   Displays:
@@ -639,5 +698,5 @@ Window Geometry:
   Views:
     collapsed: true
   Width: 1657
-  X: 865
-  Y: 74
+  X: 263
+  Y: 44
