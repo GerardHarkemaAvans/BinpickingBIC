@@ -6,7 +6,8 @@
 #include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/PoseStamped.h>
-#include <tf/transform_broadcaster.h>
+//#include <tf/transform_broadcaster.h>
+#include <tf2_ros/static_transform_broadcaster.h>
 #include <cstdio>
 #include <tf2/LinearMath/Quaternion.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -55,9 +56,7 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 	static_transformStamped.header.stamp = ros::Time::now();
 	static_transformStamped.header.frame_id = "camera_depth_optical_frame";
 	static_transformStamped.child_frame_id = "object_to_grasp";
-//	static_transformStamped.transform.translation.x = 0;
-//	static_transformStamped.transform.translation.y = 0;
-//	static_transformStamped.transform.translation.z = 0.38;
+
 	static_transformStamped.transform.translation = object_position;
 	static_transformStamped.transform.rotation.x = 0;
 	static_transformStamped.transform.rotation.y = 0;
@@ -77,24 +76,20 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 		poseStamped.pose.orientation.z = 0;
 		poseStamped.pose.orientation.w = 1.0;
 		transformStamped = tfBuffer.lookupTransform("base_link", "object_to_grasp", ros::Time(0));
-		tf2::doTransform(poseStamped, poseStamped, transformStamped); // robotPose is the PoseStamped I want to transform
-#if 0
-		tf::StampedTransform poseStamped2;
-		//geometry_msgs::PoseStamped poseStamped2(transformStamped);
-		poseStamped2.
-		poseStamped2.header.stamp = ros::Time(0);
-		poseStamped2.header.frame_id = "base_link";
-		poseStamped2.child_frame_id = "object_to_grasp_capture";
-#endif
-		
-		tf::Transform transform;
-		transform.setOrigin(poseStamped.pose.translation);
-		transform.setRotation(poseStamped.pose.orientation);
+		tf2::doTransform(poseStamped, poseStamped, transformStamped); // object_to_grasp is the PoseStamped I want to transform
 
-		tf::StampedTransform poseStamped2(transform, ros::Time::now(), "base_link", "object_to_grasp_capture");
+		static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+		geometry_msgs::TransformStamped static_transformStamped;
 
-		static tf::TransformBroadcaster broadcaster;
-		broadcaster.sendTransform(poseStamped2);
+		static_transformStamped.header.stamp = ros::Time::now();
+		static_transformStamped.header.frame_id = "base_link";
+		static_transformStamped.child_frame_id = "object_to_grasp_capture";
+		static_transformStamped.transform.translation.x = poseStamped.pose.position.x;
+		static_transformStamped.transform.translation.y = poseStamped.pose.position.y;
+		static_transformStamped.transform.translation.z = poseStamped.pose.position.z;
+
+		static_transformStamped.transform.rotation = poseStamped.pose.orientation;
+		static_broadcaster.sendTransform(static_transformStamped);
 
 		response.success = true;
 		response.object_pose = poseStamped;
@@ -106,32 +101,6 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 	}
 
 
-
-#if 0
-	pcl::PCLPointCloud2* colored_Pointcloud2 = new pcl::PCLPointCloud2;
-	pcl::toPCLPointCloud2(*colored_Pointcloud, *colored_Pointcloud2); // From PCL to PCL2
-
-	sensor_msgs::PointCloud2Ptr output_cloud(new sensor_msgs::PointCloud2);// = new sensor_msgs::PointCloud2;
-	pcl_conversions::fromPCL(*colored_Pointcloud2, *output_cloud);  // From PCL2 to ROS-PCL
-#endif
-
-
-
-	#if 0
-
-	//  calculate_objectpose_from_pointcloud(request.pointcloud, image);
-
-	try
-	{
-	pcl::toROSMsg (request.pointcloud, image);
-	}
-	catch (std::runtime_error)
-	{
-	    ROS_ERROR("runtime_error");
-	}
-
-	image_pub.publish (image); //publish our cloud image
-	#endif
 	ROS_INFO("CalculateObjectposeFromPointcloud exit");
 	/* return object pose in response*/
 	return true;

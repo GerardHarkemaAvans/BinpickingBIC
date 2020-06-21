@@ -497,8 +497,6 @@ Visualization Manager:
           Value: false
         camera_depth_optical_frame:
           Value: false
-        camera_depth_optical_frame_capture:
-          Value: true
         camera_infra1_frame:
           Value: false
         camera_infra1_optical_frame:
@@ -518,7 +516,7 @@ Visualization Manager:
         epick_gripper_BaseCableLink:
           Value: false
         epick_gripper_BasePickPointLink:
-          Value: true
+          Value: false
         epick_gripper_BaseVacuumCupLink:
           Value: false
         epick_gripper_BaseVacuumMountingBaseLink:
@@ -529,8 +527,6 @@ Visualization Manager:
           Value: false
         mountingplate_link:
           Value: false
-        object_to_grasp:
-          Value: true
         shoulder_link:
           Value: false
         tool0:
@@ -557,8 +553,6 @@ Visualization Manager:
               base_link:
                 base:
                   {}
-                camera_depth_optical_frame_capture:
-                  {}
                 shoulder_link:
                   upper_arm_link:
                     forearm_link:
@@ -579,8 +573,7 @@ Visualization Manager:
                                               {}
                                           camera_depth_frame:
                                             camera_depth_optical_frame:
-                                              object_to_grasp:
-                                                {}
+                                              {}
                                           camera_infra1_frame:
                                             camera_infra1_optical_frame:
                                               {}
@@ -630,6 +623,36 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: RGB8
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.009999999776482582
+      Style: Flat Squares
+      Topic: /camera/depth/color/points
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -658,25 +681,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.2060186862945557
+      Distance: 2.163087844848633
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.04414299875497818
-        Y: -0.013696899637579918
-        Z: 0.019943900406360626
+        X: 0.13758908212184906
+        Y: 0.13804754614830017
+        Z: -0.11988920718431473
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.050397470593452454
+      Pitch: 0.5503973960876465
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 6.238592624664307
+      Yaw: 6.233592510223389
     Saved: ~
 Window Geometry:
   Displays:
@@ -699,4 +722,4 @@ Window Geometry:
     collapsed: true
   Width: 1657
   X: 263
-  Y: 44
+  Y: 27
