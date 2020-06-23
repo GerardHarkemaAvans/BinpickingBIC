@@ -10,21 +10,10 @@
   <!-- start the pointcloud capture server -->
   <node name="capture_pointcloud_server" pkg="binpicking" type="capture_pointcloud_server.py"/>
 
-  <!-- start the environment  
-  <include file="$(find binpicking_moveit_config)/launch/demo.launch"/>
--->
-
- <include file="$(find ur5_e_moveit_config)/launch/ur5_e_moveit_planning_execution.launch"/>
-
   <!-- start the environment -->
- <include file="$(find ur5_e_moveit_config)/launch/moveit_rviz.launch"> 
-     <arg name="config" value="true"/>
-  </include>
-
-
+  <include file="$(find binpicking_moveit_config)/launch/demo_real_world.launch"/>
 
   <!-- start the calculate object pose server -->
   <node name="calculate_object_pose" pkg="binpicking_pcl" type="calculate_objectpose_from_pointcloud" output="screen"/>
-
 
 </launch>
