@@ -8,13 +8,13 @@
 ###########################################################
 
 from flexbe_core import Behavior, Autonomy, OperatableStateMachine, ConcurrencyContainer, PriorityContainer, Logger
+from robotiq_flexbe_states.epick_gripper_control_state import EpickVacuumGripperControlState
 from flexbe_manipulation_states.srdf_state_to_moveit import SrdfStateToMoveit
 from binpicking_flexbe_states.capture_pointcloud_state import CapturePointcloudState
 from binpicking_flexbe_states.calculate_object_pose_state import CalculateObjectPoseState
 from miscellaneous_flexbe_states.message_state import MessageState
 from binpicking_flexbe_states.compute_grasp_state import ComputeGraspState
 from binpicking_flexbe_states.moveit_to_joints_dyn_state import MoveitToJointsDynState as binpicking_flexbe_states__MoveitToJointsDynState
-from robotiq_flexbe_states.epick_gripper_control_state import EpickVacuumGripperControlState
 # Additional imports can be added inside the following tags
 # [MANUAL_IMPORT]
 
@@ -52,7 +52,8 @@ class BinpickingSM(Behavior):
 		pick_group = 'manipulator'
 		names = ['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint']
 		gripper = 'epick_gripper_BasePickPointLink'
-		# x:336 y:593, x:317 y:372
+		gripper_device = '/dev/ttyUSB0'
+		# x:48 y:593, x:317 y:372
 		_state_machine = OperatableStateMachine(outcomes=['finished', 'failed'])
 		_state_machine.userdata.captured_pointcloud = []
 		_state_machine.userdata.part_pose = []
@@ -70,17 +71,16 @@ class BinpickingSM(Behavior):
 
 
 		with _state_machine:
-			# x:30 y:40
-			OperatableStateMachine.add('GoHomeStart',
-										SrdfStateToMoveit(config_name='HomePos', move_group=pick_group, action_topic='/move_group', robot_name=""),
-										transitions={'reached': 'GoPhotoPosition', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
-										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
-										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
+			# x:30 y:102
+			OperatableStateMachine.add('ActivateGripper',
+										EpickVacuumGripperControlState(device=gripper_device, gripper_command='a', setteling_time=0),
+										transitions={'continue': 'GoHomeStart', 'failed': 'failed'},
+										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
 
 			# x:428 y:570
 			OperatableStateMachine.add('GoHomeEnd',
 										SrdfStateToMoveit(config_name='HomePos', move_group=pick_group, action_topic='/move_group', robot_name=""),
-										transitions={'reached': 'finished', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										transitions={'reached': 'ResetGripper', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
 										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
 										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
@@ -156,15 +156,28 @@ class BinpickingSM(Behavior):
 
 			# x:911 y:206
 			OperatableStateMachine.add('GrapsObject',
-										EpickVacuumGripperControlState(enable=True, vacuum_power=100, setteling_time=3.0),
+										EpickVacuumGripperControlState(device=gripper_device, gripper_command='g', setteling_time=3.0),
 										transitions={'continue': 'GoObjectLiftPosition', 'failed': 'failed'},
 										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
 
 			# x:906 y:569
 			OperatableStateMachine.add('DropObject',
-										EpickVacuumGripperControlState(enable=False, vacuum_power=0, setteling_time=1.0),
+										EpickVacuumGripperControlState(device=gripper_device, gripper_command='c', setteling_time=1.0),
 										transitions={'continue': 'GoHomeEnd', 'failed': 'failed'},
 										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:170 y:574
+			OperatableStateMachine.add('ResetGripper',
+										EpickVacuumGripperControlState(device=gripper_device, gripper_command='r', setteling_time=0),
+										transitions={'continue': 'finished', 'failed': 'failed'},
+										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
+
+			# x:30 y:40
+			OperatableStateMachine.add('GoHomeStart',
+										SrdfStateToMoveit(config_name='HomePos', move_group=pick_group, action_topic='/move_group', robot_name=""),
+										transitions={'reached': 'GoPhotoPosition', 'planning_failed': 'failed', 'control_failed': 'failed', 'param_error': 'failed'},
+										autonomy={'reached': Autonomy.Off, 'planning_failed': Autonomy.Off, 'control_failed': Autonomy.Off, 'param_error': Autonomy.Off},
+										remapping={'config_name': 'config_name', 'move_group': 'move_group', 'robot_name': 'robot_name', 'action_topic': 'action_topic', 'joint_values': 'joint_values', 'joint_names': 'joint_names'})
 
 
 		return _state_machine
