@@ -156,7 +156,7 @@ class BinpickingSM(Behavior):
 
 			# x:911 y:206
 			OperatableStateMachine.add('GrapsObject',
-										EpickVacuumGripperControlState(enable=True, vacuum_power=100, setteling_time=1.0),
+										EpickVacuumGripperControlState(enable=True, vacuum_power=100, setteling_time=3.0),
 										transitions={'continue': 'GoObjectLiftPosition', 'failed': 'failed'},
 										autonomy={'continue': Autonomy.Off, 'failed': Autonomy.Off})
 

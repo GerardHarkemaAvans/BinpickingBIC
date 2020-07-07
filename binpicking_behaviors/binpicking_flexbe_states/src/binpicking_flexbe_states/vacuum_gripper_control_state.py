@@ -2,6 +2,7 @@
 import rospy
 
 from flexbe_core import EventState, Logger
+from robotiq_vacuum_grippers_control.msg import _RobotiqVacuumGrippers_robot_output  as outputMsg
 
 
 class VacuumGripperControlState(EventState):
@@ -27,6 +28,8 @@ class VacuumGripperControlState(EventState):
 		# Thus, we cannot save the starting time now and will do so later.
 		self._start_time = None
 
+	    	self.pub = rospy.Publisher('RobotiqVacuumGrippersRobotOutput', outputMsg.RobotiqVacuumGrippers_robot_output)
+
 
 	def execute(self, userdata):
 		# This method is called periodically while the state is active.
@@ -44,6 +47,13 @@ class VacuumGripperControlState(EventState):
 		# The following code is just for illustrating how the behavior logger works.
 		# Text logged by the behavior logger is sent to the operator and displayed in the GUI.
 
+	        command = outputMsg.RobotiqVacuumGrippers_robot_output();
+	        command.rPR = 0
+	        self.pub.publish(command)
+
+
+
+		self._start_time = rospy.Time.now()
 		time_to_wait = (self._target_time - (rospy.Time.now() - self._start_time)).to_sec()
 
 		if time_to_wait > 0:
@@ -63,7 +73,6 @@ class VacuumGripperControlState(EventState):
 		# because if anything failed, the behavior would not even be started.
 
 		# In this example, we use this event to set the correct start time.
-		self._start_time = rospy.Time.now()
 
 
 	def on_stop(self):

@@ -3,8 +3,10 @@
 
 import rospy
 
+import roslib; roslib.load_manifest('robotiq_vacuum_grippers_control')
 from flexbe_core import EventState, Logger
 from flexbe_core.proxy import ProxyServiceCaller
+from robotiq_vacuum_grippers_control.msg import _RobotiqVacuumGrippers_robot_output  as outputMsg
 
 
 '''
@@ -20,7 +22,7 @@ class EpickVacuumGripperControlState(EventState):
 	State to control Robotiq Epick suction gripper"
 
 	-- enable	 		bool 		'true' to activates the gripper, 'false' to deactivate it
-	-- vacuum_power			float		vacuum power 1..100
+	-- vacuum_power			float		vacuum power 1..255
 	-- setteling_time 		float 		Time which needs to have passed since the behavior started.
 	<= continue 					if the gripper activation or de-activation has been succesfully achieved
 	<= failed 						otherwise
@@ -38,7 +40,9 @@ class EpickVacuumGripperControlState(EventState):
 		# Thus, we cannot save the starting time now and will do so later.
 		self._start_time = None
 		
-
+		#rospy.init_node('RobotiqVacuumGrippersSimpleController')
+		self._pub = rospy.Publisher('RobotiqVacuumGrippersRobotOutput', outputMsg.RobotiqVacuumGrippers_robot_output, queue_size = 10)
+		
 	def execute(self, userdata):
 		# This method is called periodically while the state is active.
 		# Main purpose is to check state conditions and trigger a corresponding outcome.
@@ -51,6 +55,13 @@ class EpickVacuumGripperControlState(EventState):
 	def on_enter(self, userdata):
 		# This method is called when the state becomes active, i.e. a transition from another state to this one is taken.
 		# It is primarily used to start actions which are associated with this state.
+
+	        #command = outputMsg.RobotiqVacuumGrippers_robot_output();
+	        #command.rPR = userdata.vacuum_power
+	        #self._pub.publish(command)
+
+
+		self._start_time = rospy.Time.now()
 		time_to_wait = (self._target_time - (rospy.Time.now() - self._start_time)).to_sec()
 
 		if time_to_wait > 0:
@@ -69,7 +80,7 @@ class EpickVacuumGripperControlState(EventState):
 		# This method is called when the behavior is started.
 		# If possible, it is generally better to initialize used resources in the constructor
 		# because if anything failed, the behavior would not even be started.
-		self._start_time = rospy.Time.now()
+		pass # Nothing to do
 
 	def on_stop(self):
 		# This method is called whenever the behavior stops execution, also if it is cancelled.
