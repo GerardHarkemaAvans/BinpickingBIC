@@ -24,9 +24,8 @@
 #include <pcl/visualization/cloud_viewer.h>
 
 
-//ros::Publisher image_pub; //image message publisher
-ros::Publisher pointcloud_pub;
-//sensor_msgs::Image image; //cache the image message
+ros::Publisher image_pub; //image message publisher
+sensor_msgs::Image image; //cache the image message
 
 
 bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromPointcloud::Request  &request,
@@ -34,42 +33,18 @@ bool CalculateObjectposeFromPointcloud(binpicking_msgs::CalculateObjectposeFromP
 {
 
 	ROS_INFO("CalculateObjectposeFromPointcloud start");
-
+	
 	pcl::PCLPointCloud2* point_cloud2 = new pcl::PCLPointCloud2;
 	pcl_conversions::toPCL(request.pointcloud, *point_cloud2);  // From ROS-PCL to PCL2
 
 	pcl::PointCloud<pcl::PointXYZ>::Ptr point_cloud(new pcl::PointCloud<pcl::PointXYZ>);
 	pcl::fromPCLPointCloud2(*point_cloud2, *point_cloud); // From PCL2 to PCL
 
-	/* Filtered Cloud, added by Gerard */
-	pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
-  /* end add */
 
 	pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_Pointcloud(new pcl::PointCloud <pcl::PointXYZRGB>);
+	geometry_msgs::Vector3 object_position = calculate_objectpose_from_pointcloud(point_cloud, colored_Pointcloud);
 
-	/* cloud_filtered added by Gerard */
-	geometry_msgs::Vector3 object_position = calculate_objectpose_from_pointcloud(point_cloud, colored_Pointcloud, cloud_filtered);
-
-	/* Added by Gerard */
-	pcl::PCLPointCloud2* point_cloud2_filtered = new pcl::PCLPointCloud2;
-	pcl::toPCLPointCloud2(*cloud_filtered, *point_cloud2_filtered); // From PCL to PCL2
-
-  /* initialaize pointcloud */
-  ROS_INFO("Create filtered ROS cloud");
-
-  sensor_msgs::PointCloud2 ros_point_cloud_filtered;
-  pcl::toROSMsg(*cloud_filtered, ros_point_cloud_filtered);
-  /* of deze */
-	//pcl_conversions::fromPCL(*point_cloud2_filtered, ros_point_cloud_filtered); // From PCL2 to ROS-PCL2
-
-  ros_point_cloud_filtered.header.frame_id = request.pointcloud.header.frame_id;
-
-  /* publish point cloud */
-  ROS_INFO("Publish filtered cloud");
-
-  pointcloud_pub.publish(ros_point_cloud_filtered);
-  /* End add */
-
+		
 	geometry_msgs::TransformStamped static_transformStamped;
 
 	tf2_ros::Buffer tfBuffer;
@@ -137,19 +112,11 @@ int main(int argc, char **argv)
 
 
 	ros::init(argc, argv, "calculate_object_pose_server");
-	ros::NodeHandle nh;
-	/* added by Gerard */
-//std::string topic = nh.resolveName("point_cloud_filtered");
-  uint32_t queue_size = 1;
-	pointcloud_pub = nh.advertise<sensor_msgs::PointCloud2>("point_cloud_filtered", queue_size);
+	ros::NodeHandle n;
 
-  //ros::Publisher pcl_pub=nh.advertise<sensor_msgs::PointCloud2>("pointfilter_output",1);
+	ros::ServiceServer service = n.advertiseService("calculate_object_pose", CalculateObjectposeFromPointcloud);
 
-
-	/* end add */
-
-	ros::ServiceServer service = nh.advertiseService("calculate_object_pose", CalculateObjectposeFromPointcloud);
-
+	image_pub = n.advertise<sensor_msgs::Image> ("cloud_image", 30);
 
 	ROS_INFO("Ready to calculate pose.");
 	ros::spin();

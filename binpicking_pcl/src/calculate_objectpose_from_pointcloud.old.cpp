@@ -15,7 +15,7 @@
 #include "calculate_objectpose_from_pointcloud.h"
 
 
-geometry_msgs::Vector3 calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr &colored_cloud, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered) {
+geometry_msgs::Vector3 calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, pcl::PointCloud<pcl::PointXYZRGB>::Ptr &colored_cloud) {
 
 //	pcl::PointCloud <pcl::PointXYZRGB>::Ptr colored_cloud = reg.getColoredCloud();
 #if 0
@@ -35,19 +35,8 @@ geometry_msgs::Vector3 calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl:
 	normal_estimator.compute(*normals);
 
 
-  // Adde by Gerard, dummy filter */
-  // Create the filtering object
-  pcl::PassThrough<pcl::PointXYZ> pass;
-  pass.setInputCloud (cloud);
-  pass.setFilterFieldName ("z");
-  pass.setFilterLimits (0.0, 1.0);
-  //pass.setFilterLimitsNegative (true);
-  /* The actal filtering */
-  pass.filter(*cloud_filtered);
-  // End add */
-
 #if 0
-	// Niet nodig
+	// Niet nodig 
 	pcl::IndicesPtr indices(new std::vector <int>);
 	pcl::PassThrough<pcl::PointXYZ> pass;
 	pass.setInputCloud(cloud);
@@ -80,11 +69,11 @@ geometry_msgs::Vector3 calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl:
 	pcl::PointXYZ CenterPointMin;
 	// Find neraest object
 	for (std::vector<pcl::PointIndices>::const_iterator it = clusters.begin(); it != clusters.end(); ++it)
-	{
+	{	
 		/* Create pointcloud from cluster */
 		cloud_cluster->points.clear();
 		for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit)
-			cloud_cluster->points.push_back(cloud->points[*pit]);
+			cloud_cluster->points.push_back(cloud->points[*pit]); 
 		cloud_cluster->width = cloud_cluster->points.size();
 		cloud_cluster->height = 1;
 		cloud_cluster->is_dense = true;
@@ -110,13 +99,13 @@ geometry_msgs::Vector3 calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl:
 			if(CenterPoint.z < CenterPointMin.z)
 				CenterPointMin = CenterPoint;
 		}
-		// ROS_INFO("The middlepoint of object (%i): %f, %f, %f (x,y,z)", cnt, CenterPoint.x, CenterPoint.y, CenterPoint.z);
+		// ROS_INFO("The middlepoint of object (%i): %f, %f, %f (x,y,z)", cnt, CenterPoint.x, CenterPoint.y, CenterPoint.z); 
 		cnt++;
 	}
-	ROS_INFO("The centerpoint of the nearest object: %f, %f, %f (x,y,z)", CenterPointMin.x, CenterPointMin.y, CenterPointMin.z);
+	ROS_INFO("The centerpoint of the nearest object: %f, %f, %f (x,y,z)", CenterPointMin.x, CenterPointMin.y, CenterPointMin.z); 
 
 	geometry_msgs::Vector3 result;
-
+	
 	result.x = CenterPointMin.x;
 	result.y = CenterPointMin.y;
 	result.z = CenterPointMin.z;
@@ -133,3 +122,4 @@ geometry_msgs::Vector3 calculate_objectpose_from_pointcloud(pcl::PointCloud<pcl:
 #endif
 
 }
+
